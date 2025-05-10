@@ -60,5 +60,9 @@ def get(service):
         })
     return jsonify({"error": "Service not found."}), 404
   
+@app.route("/")
+def home():
+    return "Password Manager is running!"
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
