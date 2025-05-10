@@ -29,16 +29,27 @@
     <div id="result" class="result"></div>
   </div>
 
+  <!-- Modal for displaying service details -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal()">&times;</span>
-      <h2 id="modal-service"></h2>
-      <p><strong>Username:</strong> <span id="modal-username"></span></p>
-      <p><strong>Password:</strong> <span id="modal-password"></span></p>
-      <div class="modal-buttons">
-        <button class="btn" onclick="closeModal()">Close</button>
-        <button class="btn" onclick="exitApp()">Exit</button>
+      <div class="modal-header">
+        <img id="modal-logo" src="" alt="Service Logo" class="service-logo">
+        <h2 id="modal-service"></h2>
       </div>
+      <div class="modal-body">
+        <p><strong>Username:</strong> <span id="modal-username"></span></p>
+        <p><strong>Password:</strong> <span id="modal-password"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeErrorModal()">&times;</span>
+      <h2>Error</h2>
+      <p id="error-message"></p>
     </div>
   </div>
 
