@@ -14,76 +14,182 @@ function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
+function showAddPasswordModal() {
+  document.getElementById("add-password-modal").style.display = "flex";
+}
+
+function showGetPasswordModal() {
+  document.getElementById("get-password-modal").style.display = "flex";
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = "none";
+}
+
+// Function to show notification modal
+function showNotification(message) {
+  const notificationModal = document.getElementById("notification-modal");
+  const notificationMessage = document.getElementById("notification-message");
+
+  // Set the message and show the modal
+  notificationMessage.textContent = message;
+  notificationModal.style.display = "block";
+
+  // Hide the modal after 3.5 seconds
+  setTimeout(() => {
+    notificationModal.style.display = "none";
+  }, 3500);
+}
+
 // Update existing functions to use the error modal
 async function addPassword() {
-  const service = document.getElementById("service").value;
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  const service = document.getElementById("add-service").value;
+  const username = document.getElementById("add-username").value;
+  const password = document.getElementById("add-password").value;
 
   if (!service || !username || !password) {
     showErrorModal("Please fill in all fields.");
     return;
   }
 
-  const response = await fetch("/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ service, username, password })
-  });
+  try {
+    const response = await fetch("/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ service, username, password })
+    });
 
-  const data = await response.json();
-  if (!data.success) {
-    showErrorModal(data.error || "An unknown error occurred.");
-  } else {
-    document.getElementById("result").innerText = "Password added successfully!";
+    const data = await response.json();
+    if (response.ok) {
+      alert(data.success);
+      closeModal("add-password-modal");
+    } else {
+      showErrorModal(data.error || "An unknown error occurred.");
+    }
+  } catch (error) {
+    showErrorModal("Failed to add password. Please try again.");
+    console.error(error);
   }
 }
 
 async function getPassword() {
-  const service = document.getElementById("service").value;
+  const service = document.getElementById("get-service").value;
+  const username = document.getElementById("get-username").value;
 
-  if (!service) {
-    showErrorModal("Please select a service.");
+  if (!service || !username) {
+    showErrorModal("Please select a service and enter a username.");
     return;
   }
 
   try {
-    const response = await fetch(`/get/${service}`);
-    if (!response.ok) {
-      showErrorModal("Error: " + response.statusText);
-      return;
-    }
+    const response = await fetch(`/get/${service}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username })
+    });
 
     const data = await response.json();
-
-    if (data.username) {
-      // Set the service logo
-      const logoMap = {
-        Facebook: "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
-        Spotify: "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg",
-        Netflix: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
-        Instagram: "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png",
-        Twitter: "https://upload.wikimedia.org/wikipedia/commons/6/60/Twitter_Logo_as_of_2021.svg",
-        TikTok: "https://upload.wikimedia.org/wikipedia/en/6/69/TikTok_logo.svg",
-      };
-
-      const logoUrl = logoMap[service] || "https://via.placeholder.com/50"; // Default logo if service not found
-      document.getElementById("modal-logo").src = logoUrl;
-
-      // Populate modal with service details
-      document.getElementById("modal-service").innerText = `Service: ${service}`;
-      document.getElementById("modal-username").innerText = data.username;
-      document.getElementById("modal-password").innerText = data.password;
-
-      // Show the modal
-      document.getElementById("modal").style.display = "flex";
+    if (response.ok) {
+      alert(`Username: ${data.credentials[0].username}\nPassword: ${data.credentials[0].password}`);
+      closeModal("get-password-modal");
     } else {
-      showErrorModal(data.error || "Service not found.");
+      showErrorModal(data.error || "An unknown error occurred.");
     }
   } catch (error) {
-    showErrorModal("An error occurred while retrieving the data.");
+    showErrorModal("Failed to retrieve passwords. Please try again.");
+    console.error(error);
+  }
+}
+
+async function register() {
+  const username = document.getElementById("register-username").value.trim();
+  const password = document.getElementById("register-password").value.trim();
+  const errorElement = document.getElementById("signup-error");
+
+  // Clear previous error messages
+  errorElement.textContent = "";
+
+  if (!username || !password) {
+    errorElement.textContent = "Please fill in all fields.";
+    return;
+  }
+
+  try {
+    const response = await fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert("Registration successful!");
+      window.location.href = "/profile"; // Redirect to profile page
+    } else {
+      errorElement.textContent = data.error || "An unknown error occurred.";
+    }
+  } catch (error) {
+    errorElement.textContent = "Failed to sign up. Please try again.";
+    console.error(error);
+  }
+}
+
+async function login() {
+  const username = document.getElementById("login-username").value.trim();
+  const password = document.getElementById("login-password").value.trim();
+  const errorElement = document.getElementById("login-error");
+
+  // Clear previous error messages
+  errorElement.textContent = "";
+
+  if (!username || !password) {
+    errorElement.textContent = "Please fill in all fields.";
+    return;
+  }
+
+  try {
+    const response = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert("Login successful!"); // Notify the user
+      window.location.href = "/profile"; // Redirect to profile page
+    } else {
+      errorElement.textContent = data.error || "An unknown error occurred.";
+    }
+  } catch (error) {
+    errorElement.textContent = "Failed to log in. Please try again.";
+    console.error(error);
+  }
+}
+
+async function logout() {
+  try {
+    const response = await fetch("/logout", {
+      method: "POST"
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showNotification("Logged out successfully!");
+      window.location.href = "/"; // Redirect to login page
+    } else {
+      alert(data.error || "An unknown error occurred.");
+    }
+  } catch (error) {
+    alert("Failed to log out. Please try again.");
     console.error(error);
   }
 }
@@ -92,3 +198,112 @@ function exitApp() {
   window.close();
   window.location.href = "about:blank";
 }
+
+async function checkSession() {
+  try {
+    const response = await fetch("/check-session");
+    const data = await response.json();
+
+    if (data.logged_in) {
+      // User is logged in, show the password management interface
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("password-section").style.display = "block";
+    } else {
+      // User is not logged in, show the login/register form
+      document.getElementById("auth-section").style.display = "block";
+      document.getElementById("password-section").style.display = "none";
+    }
+  } catch (error) {
+    console.error("Failed to check session:", error);
+  }
+}
+
+async function populateServiceDropdowns() {
+  try {
+    const response = await fetch("/get-services", {
+      method: "GET",
+    });
+
+    if (response.ok) {
+      const services = await response.json();
+      const addServiceDropdown = document.getElementById("add-service");
+      const getServiceDropdown = document.getElementById("get-service");
+
+      // Clear existing options
+      addServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
+      getServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
+
+      // Populate dropdowns with services
+      services.forEach(service => {
+        const option = document.createElement("option");
+        option.value = service;
+        option.textContent = service;
+
+        addServiceDropdown.appendChild(option);
+        getServiceDropdown.appendChild(option.cloneNode(true));
+      });
+    } else {
+      console.error("Failed to fetch services.");
+    }
+  } catch (error) {
+    console.error("Error fetching services:", error);
+  }
+}
+
+async function fetchPasswords() {
+  try {
+    const response = await fetch("/get-all-passwords", {
+      method: "GET",
+    });
+
+    if (response.ok) {
+      const passwords = await response.json();
+      const tableBody = document.getElementById("password-table-body");
+
+      // Clear existing rows
+      tableBody.innerHTML = "";
+
+      // Populate table with passwords
+      passwords.forEach(({ service, username, password }) => {
+        const row = document.createElement("tr");
+
+        const serviceCell = document.createElement("td");
+        serviceCell.textContent = service;
+
+        const usernameCell = document.createElement("td");
+        usernameCell.textContent = username;
+
+        const passwordCell = document.createElement("td");
+        passwordCell.textContent = password;
+
+        row.appendChild(serviceCell);
+        row.appendChild(usernameCell);
+        row.appendChild(passwordCell);
+
+        tableBody.appendChild(row);
+      });
+    } else {
+      console.error("Failed to fetch passwords.");
+    }
+  } catch (error) {
+    console.error("Error fetching passwords:", error);
+  }
+}
+
+function togglePasswordVisibility(inputId, toggleButton) {
+  const passwordInput = document.getElementById(inputId);
+  const isPasswordVisible = passwordInput.type === "text";
+
+  // Toggle the input type
+  passwordInput.type = isPasswordVisible ? "password" : "text";
+
+  // Update the button text/icon
+  toggleButton.textContent = isPasswordVisible ? "👁️" : "🙈";
+}
+
+// Call this function when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+  checkSession();
+  populateServiceDropdowns();
+  fetchPasswords();
+});

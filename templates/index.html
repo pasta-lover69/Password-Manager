@@ -3,56 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Manager</title>
+  <title>Password Manager - Login</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>Password Manager</h1>
-    <div class="form">
-      <select id="service" class="input">
-        <option value="" disabled selected>Select a Service</option>
-        <option value="Facebook">Facebook</option>
-        <option value="Spotify">Spotify</option>
-        <option value="Netflix">Netflix</option>
-        <option value="Instagram">Instagram</option>
-        <option value="Twitter">Twitter</option>
-        <option value="TikTok">TikTok</option>
-      </select>
-      <input id="username" class="input" placeholder="Username" type="text">
-      <input id="password" class="input" placeholder="Password" type="password">
-      <div class="buttons">
-        <button class="btn" onclick="addPassword()">Add Password</button>
-        <button class="btn" onclick="getPassword()">Get Password</button>
-      </div>
-    </div>
-    <div id="result" class="result"></div>
-  </div>
-
-  <!-- Modal for displaying service details -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      <div class="modal-header">
-        <img id="modal-logo" src="" alt="Service Logo" class="service-logo">
-        <h2 id="modal-service"></h2>
-      </div>
-      <div class="modal-body">
-        <p><strong>Username:</strong> <span id="modal-username"></span></p>
-        <p><strong>Password:</strong> <span id="modal-password"></span></p>
+    <div class="login-card">
+      <h1 class="title">Welcome Back</h1>
+      <p class="subtitle">Securely manage your passwords with ease.</p>
+      <form id="login-form">
+        <div class="input-group">
+          <label for="login-username">Username</label>
+          <input id="login-username" type="text" placeholder="Enter your username" required>
+        </div>
+        <div class="input-group">
+          <label for="login-password">Password</label>
+          <div class="password-container">
+            <input id="login-password" type="password" placeholder="Enter your password" required>
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">👁️</button>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" onclick="login()">Log In</button>
+        <p id="login-error" class="error-message"></p>
+      </form>
+      <div class="footer">
+        <p>Don't have an account? <a href="/signup">Sign up</a></p>
       </div>
     </div>
   </div>
-
-  <!-- Error Modal -->
-  <div id="error-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeErrorModal()">&times;</span>
-      <h2>Error</h2>
-      <p id="error-message"></p>
-    </div>
-  </div>
-
   <script src="/static/main.js"></script>
 </body>
 </html>
