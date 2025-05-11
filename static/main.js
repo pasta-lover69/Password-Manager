@@ -110,7 +110,10 @@ async function register() {
   const password = document.getElementById("register-password").value.trim();
   const errorElement = document.getElementById("signup-error");
 
-  // Clear previous error messages
+  console.log("Register button clicked");
+  console.log("Username:", username);
+  console.log("Password:", password);
+
   errorElement.textContent = "";
 
   if (!username || !password) {
@@ -130,7 +133,7 @@ async function register() {
     const data = await response.json();
     if (response.ok) {
       alert("Registration successful!");
-      window.location.href = "/profile"; // Redirect to profile page
+      window.location.href = "/profile";
     } else {
       errorElement.textContent = data.error || "An unknown error occurred.";
     }
@@ -145,7 +148,6 @@ async function login() {
   const password = document.getElementById("login-password").value.trim();
   const errorElement = document.getElementById("login-error");
 
-  // Clear previous error messages
   errorElement.textContent = "";
 
   if (!username || !password) {
@@ -164,8 +166,8 @@ async function login() {
 
     const data = await response.json();
     if (response.ok) {
-      alert("Login successful!"); // Notify the user
-      window.location.href = "/profile"; // Redirect to profile page
+      alert("Login successful!");
+      window.location.href = "/profile";
     } else {
       errorElement.textContent = data.error || "An unknown error occurred.";
     }
@@ -184,7 +186,7 @@ async function logout() {
     const data = await response.json();
     if (response.ok) {
       showNotification("Logged out successfully!");
-      window.location.href = "/"; // Redirect to login page
+      window.location.href = "/";
     } else {
       alert(data.error || "An unknown error occurred.");
     }
@@ -205,11 +207,9 @@ async function checkSession() {
     const data = await response.json();
 
     if (data.logged_in) {
-      // User is logged in, show the password management interface
       document.getElementById("auth-section").style.display = "none";
       document.getElementById("password-section").style.display = "block";
     } else {
-      // User is not logged in, show the login/register form
       document.getElementById("auth-section").style.display = "block";
       document.getElementById("password-section").style.display = "none";
     }
@@ -229,11 +229,9 @@ async function populateServiceDropdowns() {
       const addServiceDropdown = document.getElementById("add-service");
       const getServiceDropdown = document.getElementById("get-service");
 
-      // Clear existing options
       addServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
       getServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
 
-      // Populate dropdowns with services
       services.forEach(service => {
         const option = document.createElement("option");
         option.value = service;
@@ -260,10 +258,8 @@ async function fetchPasswords() {
       const passwords = await response.json();
       const tableBody = document.getElementById("password-table-body");
 
-      // Clear existing rows
       tableBody.innerHTML = "";
 
-      // Populate table with passwords
       passwords.forEach(({ service, username, password }) => {
         const row = document.createElement("tr");
 
@@ -294,14 +290,11 @@ function togglePasswordVisibility(inputId, toggleButton) {
   const passwordInput = document.getElementById(inputId);
   const isPasswordVisible = passwordInput.type === "text";
 
-  // Toggle the input type
   passwordInput.type = isPasswordVisible ? "password" : "text";
 
-  // Update the button text/icon
   toggleButton.textContent = isPasswordVisible ? "👁️" : "🙈";
 }
 
-// Call this function when the page loads
 document.addEventListener("DOMContentLoaded", () => {
   checkSession();
   populateServiceDropdowns();

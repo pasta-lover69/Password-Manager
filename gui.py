@@ -60,7 +60,7 @@ tk.Label(root, text="Service").grid(row=0, column=0)
 tk.Label(root, text="Username").grid(row=1, column=0)
 tk.Label(root, text="Password").grid(row=2, column=0)
 
-service_entry = tk.Entry(root)  # Correct variable names
+service_entry = tk.Entry(root)
 username_entry = tk.Entry(root)
 password_entry = tk.Entry(root, show='*')
 

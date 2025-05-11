@@ -4,7 +4,7 @@ import os, json
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure random key
+app.secret_key = 'your_secret_key'
 KEY_FILE = 'key.key'
 PASS_FILE = 'passwords.json'
 USERS_FILE = 'users.json'
@@ -53,18 +53,22 @@ def register():
     username = data.get('username')
     password = data.get('password')
 
+    print(f"Register attempt: username={username}, password={password}")
+
     if not username or not password:
         return jsonify({"error": "Username and password are required."}), 400
 
     users = load_users()
     if username in users:
+        print("Username already exists")
         return jsonify({"error": "Username already exists."}), 400
 
     users[username] = {
         "password": generate_password_hash(password),
-        "passwords": {}  # Store user-specific passwords here
+        "passwords": {}
     }
     save_users(users)
+    print("User registered successfully")
     return jsonify({"success": "User registered successfully."})
 
 
@@ -77,28 +81,24 @@ def login():
     if not username or not password:
         return jsonify({"error": "Both username and password are required."}), 400
 
-    # Load users from the users.json file
     try:
         users = load_users()
     except FileNotFoundError:
         return jsonify({"error": "No users found. Please register first."}), 404
 
-    # Check if the username exists
     if username not in users:
         return jsonify({"error": "Invalid username or password."}), 401
 
-    # Verify the password
     if not check_password_hash(users[username]["password"], password):
         return jsonify({"error": "Invalid username or password."}), 401
 
-    # Set the session for the logged-in user
     session['username'] = username
     return jsonify({"success": "Login successful."})
 
 
 @app.route("/logout", methods=["POST"])
 def logout():
-    session.pop('username', None)  # Remove the user from the session
+    session.pop('username', None)
     return jsonify({"success": "Logged out successfully."})
 
 
@@ -185,14 +185,14 @@ def signup():
 @app.route("/profile")
 def profile():
     if 'username' not in session:
-        return redirect(url_for('index'))  # Redirect to login if not logged in
+        return redirect(url_for('index'))
     username = session['username']
     return render_template("profile.html", username=username)
 
 @app.route("/get-services", methods=["GET"])
 def get_services():
     if 'username' not in session:
-        return jsonify([])  # Return an empty list if the user is not logged in
+        return jsonify([])
 
     username = session['username']
     users = load_users()
@@ -205,7 +205,7 @@ def get_services():
 @app.route("/get-all-passwords", methods=["GET"])
 def get_all_passwords():
     if 'username' not in session:
-        return jsonify([])  # Return an empty list if the user is not logged in
+        return jsonify([])
 
     logged_in_user = session['username']
     users = load_users()
@@ -231,7 +231,7 @@ def get_all_passwords():
 @app.route("/view-passwords")
 def view_passwords():
     if 'username' not in session:
-        return redirect(url_for('index'))  # Redirect to login if not logged in
+        return redirect(url_for('index'))
     return render_template("view_passwords.html")
 
 if __name__ == "__main__":

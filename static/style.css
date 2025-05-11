@@ -575,19 +575,18 @@ hr {
   background-color: #f1f1f1;
 }
 
-/* Notification Modal Styles */
 .notification-modal {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
-  background: rgba(37, 117, 252, 0.9); /* Semi-transparent blue */
+  background: rgba(37, 117, 252, 0.9);
   color: white;
   padding: 15px 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.5s ease, fadeOut 0.5s ease 3s forwards; /* Fade in and out */
+  animation: fadeIn 0.5s ease, fadeOut 0.5s ease 3s forwards;
 }
 
 .notification-content {
@@ -618,7 +617,6 @@ hr {
   }
 }
 
-/* Password Container */
 .password-container {
   position: relative;
   display: flex;
