@@ -234,5 +234,40 @@ def view_passwords():
         return redirect(url_for('index'))
     return render_template("view_passwords.html")
 
+@app.route("/delete-password", methods=["POST"])
+def delete_password():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized. Please log in first."}), 401
+
+    data = request.get_json()
+    service = data.get('service')
+    username = data.get('username')
+
+    if not service or not username:
+        return jsonify({"error": "Service and username are required."}), 400
+
+    users = load_users()
+    logged_in_user = session['username']
+
+    if logged_in_user not in users:
+        return jsonify({"error": "User not found."}), 404
+
+    if service not in users[logged_in_user]["passwords"]:
+        return jsonify({"error": "Service not found."}), 404
+
+    passwords = users[logged_in_user]["passwords"][service]
+    updated_passwords = [entry for entry in passwords if entry["username"] != username]
+
+    if len(passwords) == len(updated_passwords):
+        return jsonify({"error": "Password not found."}), 404
+    
+    if updated_passwords:
+        users[logged_in_user]["passwords"][service] = updated_passwords
+    else:
+        del users[logged_in_user]["passwords"][service]
+
+    save_users(users)
+    return jsonify({"success": "Password deleted successfully."})
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

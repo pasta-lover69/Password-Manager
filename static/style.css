@@ -641,3 +641,18 @@ hr {
 .toggle-password:hover {
   color: #2575fc;
 }
+
+.btn-delete {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-delete:hover {
+  background: #e60000;
+}
