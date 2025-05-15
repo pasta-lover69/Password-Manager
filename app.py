@@ -269,5 +269,42 @@ def delete_password():
     save_users(users)
     return jsonify({"success": "Password deleted successfully."})
 
+@app.route("/edit-password", methods=["POST"])
+def edit_password():
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized. Please log in first."}), 401
+
+    data = request.get_json()
+    service = data.get('service')
+    username = data.get('username')
+    new_password = data.get('new_password')
+
+    if not service or not username or not new_password:
+        return jsonify({"error": "Service, username, and new password are required."}), 400
+
+    users = load_users()
+    logged_in_user = session['username']
+
+    if logged_in_user not in users:
+        return jsonify({"error": "User not found."}), 404
+
+    if service not in users[logged_in_user]["passwords"]:
+        return jsonify({"error": "Service not found."}), 404
+
+    passwords = users[logged_in_user]["passwords"][service]
+    updated = False
+
+    for entry in passwords:
+        if entry["username"] == username:
+            entry["password"] = fernet.encrypt(new_password.encode()).decode()
+            updated = True
+            break
+
+    if not updated:
+        return jsonify({"error": "Password not found."}), 404
+
+    save_users(users)
+    return jsonify({"success": "Password updated successfully."})
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
