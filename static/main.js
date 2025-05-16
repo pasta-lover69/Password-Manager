@@ -1,15 +1,12 @@
-// Function to show the error modal
 function showErrorModal(message) {
   document.getElementById("error-message").innerText = message;
   document.getElementById("error-modal").style.display = "flex";
 }
 
-// Function to close the error modal
 function closeErrorModal() {
   document.getElementById("error-modal").style.display = "none";
 }
 
-// Function to close the main modal
 function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
@@ -26,22 +23,18 @@ function closeModal(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
-// Function to show notification modal
 function showNotification(message) {
   const notificationModal = document.getElementById("notification-modal");
   const notificationMessage = document.getElementById("notification-message");
 
-  // Set the message and show the modal
   notificationMessage.textContent = message;
   notificationModal.style.display = "block";
 
-  // Hide the modal after 3.5 seconds
   setTimeout(() => {
     notificationModal.style.display = "none";
   }, 3500);
 }
 
-// Update existing functions to use the error modal
 async function addPassword() {
   const service = document.getElementById("add-service").value;
   const username = document.getElementById("add-username").value;
