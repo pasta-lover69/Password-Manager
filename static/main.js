@@ -103,16 +103,15 @@ async function register() {
   const password = document.getElementById("register-password").value.trim();
   const errorElement = document.getElementById("signup-error");
 
-  console.log("Register button clicked");
-  console.log("Username:", username);
-  console.log("Password:", password);
-
   errorElement.textContent = "";
 
   if (!username || !password) {
     errorElement.textContent = "Please fill in all fields.";
     return;
   }
+
+  showLoading();
+  disableButton("signup-btn");
 
   try {
     const response = await fetch("/register", {
@@ -125,7 +124,6 @@ async function register() {
 
     const data = await response.json();
     if (response.ok) {
-      alert("Registration successful!");
       window.location.href = "/profile";
     } else {
       errorElement.textContent = data.error || "An unknown error occurred.";
@@ -133,7 +131,45 @@ async function register() {
   } catch (error) {
     errorElement.textContent = "Failed to sign up. Please try again.";
     console.error(error);
+  } finally {
+    hideLoading();
+    enableButton("signup-btn");
   }
+}
+
+function showLoading() {
+  document.getElementById("loading-spinner").style.display = "block";
+}
+function hideLoading() {
+  document.getElementById("loading-spinner").style.display = "none";
+}
+function disableButton(btnId) {
+  const btn = document.getElementById(btnId);
+  if (btn) btn.disabled = true;
+}
+function enableButton(btnId) {
+  const btn = document.getElementById(btnId);
+  if (btn) btn.disabled = false;
+}
+
+// Example login function
+async function login() {
+  showLoading();
+  disableButton("login-btn");
+  // ...your login logic...
+  // After login completes (success or error):
+  hideLoading();
+  enableButton("login-btn");
+}
+
+// Example register function
+async function register() {
+  showLoading();
+  disableButton("signup-btn");
+  // ...your signup logic...
+  // After register completes (success or error):
+  hideLoading();
+  enableButton("signup-btn");
 }
 
 async function login() {
@@ -292,4 +328,20 @@ document.addEventListener("DOMContentLoaded", () => {
   checkSession();
   populateServiceDropdowns();
   fetchPasswords();
+
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      login();
+    });
+  }
+
+  const signupForm = document.getElementById("signup-form");
+  if (signupForm) {
+    signupForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      register();
+    });
+  }
 });

@@ -24,9 +24,13 @@
             <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">👁️</button>
           </div>
         </div>
-        <button type="button" class="btn-primary" onclick="login()">Log In</button>
+        <button type="submit" class="btn-primary" id="login-btn">Log In</button>
         <p id="login-error" class="error-message"></p>
       </form>
+      <div id="loading-msg" style="display:none; color: #007bff; margin-top: 10px;">Loading...</div>
+      <div id="loading-spinner" style="display:none; margin-top:10px;">
+        <div class="spinner"></div>
+      </div>
       <div class="footer">
         <p>Don't have an account? <a href="/signup">Sign up</a></p>
       </div>
