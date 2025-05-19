@@ -152,22 +152,17 @@ function enableButton(btnId) {
   if (btn) btn.disabled = false;
 }
 
-// Example login function
 async function login() {
   showLoading();
   disableButton("login-btn");
-  // ...your login logic...
-  // After login completes (success or error):
   hideLoading();
   enableButton("login-btn");
 }
 
-// Example register function
 async function register() {
   showLoading();
   disableButton("signup-btn");
-  // ...your signup logic...
-  // After register completes (success or error):
+
   hideLoading();
   enableButton("signup-btn");
 }
