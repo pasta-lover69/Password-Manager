@@ -9,9 +9,9 @@ app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://password_manager_database_8ubk_user:VR3JnfBYKvoFgR3MOvuaB9nvyfHo17Ww@dpg-d0j0bcmmcj7s7393u9n0-a.oregon-postgres.render.com/password_manager_database_8ubk')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.getenv("SECRET_KEY", "default_secret_key")
+app.secret_key = os.getenv("SECRET_KEY")
 
 db = SQLAlchemy(app)
 
@@ -19,16 +19,15 @@ fernet = Fernet(open("key.key", "rb").read())
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
 
 class Password(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    service = db.Column(db.String(80), nullable=False)
-    username = db.Column(db.String(80), nullable=False)
-    encrypted_password = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('passwords', lazy=True))
+    service = db.Column(db.String(150), nullable=False)
+    username = db.Column(db.String(150), nullable=False)
+    password_encrypted = db.Column(db.String(256), nullable=False)
 
 @app.route('/')
 def index():
@@ -47,7 +46,7 @@ def register():
         return jsonify({"error": "Username already exists."}), 400
 
     hashed_password = generate_password_hash(password)
-    new_user = User(username=username, password=hashed_password)
+    new_user = User(username=username, password_hash=hashed_password)
     db.session.add(new_user)
     db.session.commit()
 
@@ -66,7 +65,7 @@ def login():
         return jsonify({"error": "Both username and password are required."}), 400
 
     user = User.query.filter_by(username=username).first()
-    if not user or not check_password_hash(user.password, password):
+    if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"error": "Invalid username or password."}), 401
 
     session['username'] = username
@@ -95,7 +94,7 @@ def add():
         return jsonify({"error": "User not found."}), 404
 
     encrypted_password = fernet.encrypt(password.encode()).decode()
-    new_password = Password(service=service, username=username, encrypted_password=encrypted_password, user=user)
+    new_password = Password(service=service, username=username, password_encrypted=encrypted_password, user=user)
     db.session.add(new_password)
     db.session.commit()
 
@@ -124,7 +123,7 @@ def get(service):
     credentials = [
         {
             "username": password.username,
-            "password": fernet.decrypt(password.encrypted_password.encode()).decode()
+            "password": fernet.decrypt(password.password_encrypted.encode()).decode()
         }
         for password in passwords
     ]
@@ -172,7 +171,7 @@ def get_all_passwords():
 
     passwords = []
     for password_entry in user.passwords:
-        decrypted_password = fernet.decrypt(password_entry.encrypted_password.encode()).decode()
+        decrypted_password = fernet.decrypt(password_entry.password_encrypted.encode()).decode()
         passwords.append({
             "service": password_entry.service,
             "username": password_entry.username,
@@ -234,7 +233,7 @@ def edit_password():
     if not password_entry:
         return jsonify({"error": "Password not found."}), 404
 
-    password_entry.encrypted_password = fernet.encrypt(new_password.encode()).decode()
+    password_entry.password_encrypted = fernet.encrypt(new_password.encode()).decode()
     db.session.commit()
 
     return jsonify({"success": "Password updated successfully."})
