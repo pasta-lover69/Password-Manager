@@ -153,21 +153,6 @@ function enableButton(btnId) {
 }
 
 async function login() {
-  showLoading();
-  disableButton("login-btn");
-  hideLoading();
-  enableButton("login-btn");
-}
-
-async function register() {
-  showLoading();
-  disableButton("signup-btn");
-
-  hideLoading();
-  enableButton("signup-btn");
-}
-
-async function login() {
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value.trim();
   const errorElement = document.getElementById("login-error");
@@ -294,7 +279,6 @@ async function fetchPasswords() {
         usernameCell.textContent = username;
 
         const passwordCell = document.createElement("td");
-        passwordCell.textContent = password;
 
         row.appendChild(serviceCell);
         row.appendChild(usernameCell);
@@ -318,6 +302,24 @@ function togglePasswordVisibility(inputId, toggleButton) {
 
   toggleButton.textContent = isPasswordVisible ? "👁️" : "🙈";
 }
+
+// Dropdown toggle logic
+document.addEventListener("DOMContentLoaded", function () {
+  const dropdownBtn = document.getElementById("dropdownBtn");
+  const dropdownContent = document.getElementById("dropdownContent");
+
+  if (dropdownBtn && dropdownContent) {
+    dropdownBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", function () {
+      dropdownContent.style.display = "none";
+    });
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   checkSession();

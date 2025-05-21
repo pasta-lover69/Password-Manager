@@ -459,8 +459,8 @@ hr {
 .dropdown:hover .dropdown-content {
   display: block;
   opacity: 1;
-  transform: translateY(0); /* Slide down effect */
-  transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s; /* Add delay for showing elements */
+  transform: translateY(0);
+  transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s;
 }
 
 /* Center Container Styles */
