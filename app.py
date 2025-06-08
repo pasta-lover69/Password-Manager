@@ -9,9 +9,12 @@ app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    'DATABASE_URL',
+'postgresql://password_manager_database_8ubk_user:VR3JnfBYKvoFgR3MOvuaB9nvyfHo17Ww@dpg-d0j0bcmmcj7s7393u9n0-a.oregon-postgres.render.com/password_manager_database_8ubk'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key")
 
 db = SQLAlchemy(app)
 
@@ -21,6 +24,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    passwords = db.relationship('Password', backref='user', lazy=True)  # <-- Add this line
 
 class Password(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -61,14 +65,21 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
+    print("Login attempt:", username, password)  # Debug
+
     if not username or not password:
+        print("Missing username or password")  # Debug
         return jsonify({"error": "Both username and password are required."}), 400
 
     user = User.query.filter_by(username=username).first()
+    print("User found:", user)  # Debug
+
     if not user or not check_password_hash(user.password_hash, password):
+        print("Invalid credentials")  # Debug
         return jsonify({"error": "Invalid username or password."}), 401
 
     session['username'] = username
+    print("Login successful")  # Debug
     return jsonify({"success": "Login successful."})
 
 @app.route("/logout", methods=["POST"])
@@ -94,7 +105,7 @@ def add():
         return jsonify({"error": "User not found."}), 404
 
     encrypted_password = fernet.encrypt(password.encode()).decode()
-    new_password = Password(service=service, username=username, password_encrypted=encrypted_password, user=user)
+    new_password = Password(service=service, username=username, password_encrypted=encrypted_password, user_id=user.id)  # <-- use user_id
     db.session.add(new_password)
     db.session.commit()
 
@@ -229,7 +240,7 @@ def edit_password():
     if not user:
         return jsonify({"error": "User not found."}), 404
 
-    password_entry = Password.query.filter_by(service=service, username=username, user=user).first()
+    password_entry = Password.query.filter_by(service=service, username=username, user_id=user.id).first()  # <-- use user_id
     if not password_entry:
         return jsonify({"error": "Password not found."}), 404
 

@@ -16,7 +16,8 @@ function showAddPasswordModal() {
 }
 
 function showGetPasswordModal() {
-  document.getElementById("get-password-modal").style.display = "flex";
+  document.getElementById('get-password-modal').style.display = 'block';
+  populateServiceDropdowns();
 }
 
 function closeModal(modalId) {
@@ -227,34 +228,21 @@ async function checkSession() {
   }
 }
 
-async function populateServiceDropdowns() {
-  try {
-    const response = await fetch("/get-services", {
-      method: "GET",
+function populateServiceDropdowns() {
+  fetch('/get-services')
+    .then(res => res.json())
+    .then(services => {
+      const getServiceSelect = document.getElementById('get-service');
+      if (getServiceSelect) {
+        getServiceSelect.innerHTML = '';
+        services.forEach(service => {
+          const option = document.createElement('option');
+          option.value = service;
+          option.textContent = service;
+          getServiceSelect.appendChild(option);
+        });
+      }
     });
-
-    if (response.ok) {
-      const services = await response.json();
-      const addServiceDropdown = document.getElementById("add-service");
-      const getServiceDropdown = document.getElementById("get-service");
-
-      addServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
-      getServiceDropdown.innerHTML = '<option value="" disabled selected>Select a service</option>';
-
-      services.forEach(service => {
-        const option = document.createElement("option");
-        option.value = service;
-        option.textContent = service;
-
-        addServiceDropdown.appendChild(option);
-        getServiceDropdown.appendChild(option.cloneNode(true));
-      });
-    } else {
-      console.error("Failed to fetch services.");
-    }
-  } catch (error) {
-    console.error("Error fetching services:", error);
-  }
 }
 
 async function fetchPasswords() {
