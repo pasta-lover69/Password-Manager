@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up</title>
+  <title>Sign Up - Password Manager</title>
   <link rel="stylesheet" href="/static/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <div class="login-card">
+    <div class="card">
       <h1 class="title">Create an Account</h1>
       <p class="subtitle">Join us and securely manage your passwords.</p>
       <form id="signup-form">
@@ -24,13 +24,10 @@
             <button type="button" class="toggle-password" onclick="togglePasswordVisibility('register-password', this)">👁️</button>
           </div>
         </div>
-        <button type="submit" class="btn-primary" id="signup-btn">Sign Up</button>
+        <button type="submit" class="btn-primary">Sign Up</button>
         <p id="signup-error" class="error-message"></p>
       </form>
-      <div id="loading-msg" style="display:none; color: #007bff; margin-top: 10px;">Loading...</div>
-      <div id="loading-spinner" style="display:none; margin-top:10px;">
-        <div class="spinner"></div>
-      </div>
+      <div class="loading" id="loading-spinner"></div>
       <div class="footer">
         <p>Already have an account? <a href="/">Log in</a></p>
       </div>

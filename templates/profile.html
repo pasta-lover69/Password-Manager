@@ -23,12 +23,13 @@
   </nav>
 
   <div class="center-container">
-    <div class="welcome-card">
+    <div class="card">
       <h1 class="title">Welcome, {{ username }}</h1>
       <p class="subtitle">Manage your passwords securely.</p>
     </div>
   </div>
 
+  {% block modals %}
   <div id="add-password-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('add-password-modal')">&times;</span>
@@ -64,12 +65,7 @@
       <button class="btn-primary" onclick="getPassword()">Get</button>
     </div>
   </div>
-
-  <div id="notification-modal" class="notification-modal">
-    <div class="notification-content">
-      <p id="notification-message"></p>
-    </div>
-  </div>
+  {% endblock %}
 
   <script src="/static/main.js"></script>
 </body>

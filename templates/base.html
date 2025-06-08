@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Password Manager{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% if show_navbar %}
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="dropdown">
+        <button class="dropdown-button" id="dropdownBtn">Menu</button>
+        <div class="dropdown-content" id="dropdownContent">
+          <a href="#" onclick="showAddPasswordModal()">Add Password</a>
+          <a href="#" onclick="showGetPasswordModal()">Get Password</a>
+          <a href="/view-passwords">View Passwords</a>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+  <!-- Common Modals -->
+  {% block modals %}{% endblock %}
+
+  <div id="notification-modal" class="notification-modal">
+    <div class="notification-content">
+      <p id="notification-message"></p>
+    </div>
+  </div>
+
+  <script src="/static/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
