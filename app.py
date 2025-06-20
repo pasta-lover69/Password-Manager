@@ -3,28 +3,55 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 import os
+import base64
 
 app = Flask(__name__)
+
+# Configuration for Vercel deployment
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-'postgresql://password_manager_database_8ubk_user:VR3JnfBYKvoFgR3MOvuaB9nvyfHo17Ww@dpg-d0j0bcmmcj7s7393u9n0-a.oregon-postgres.render.com/password_manager_database_8ubk'
-)
+# Database configuration - Use environment variable for database URL
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    # Handle different database URL formats
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Fallback for local development
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///password_manager.db'
+    app.config["SESSION_COOKIE_SECURE"] = False
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key")
+app.secret_key = os.getenv("SECRET_KEY", "fallback_secret_key_change_in_production")
 
 db = SQLAlchemy(app)
 
-fernet = Fernet(open("key.key", "rb").read())
+# Encryption key management for Vercel
+def get_encryption_key():
+    """Get encryption key from environment variable"""
+    encryption_key = os.getenv('ENCRYPTION_KEY')
+    if encryption_key:
+        try:
+            # Try to decode as base64
+            return base64.b64decode(encryption_key.encode())
+        except:
+            # If that fails, use the key directly
+            return encryption_key.encode()
+    else:
+        # Generate a default key for development (not recommended for production)
+        return Fernet.generate_key()
 
+fernet = Fernet(get_encryption_key())
+
+# Database Models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    passwords = db.relationship('Password', backref='user', lazy=True)  # <-- Add this line
+    passwords = db.relationship('Password', backref='user', lazy=True)
 
 class Password(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,6 +60,12 @@ class Password(db.Model):
     username = db.Column(db.String(150), nullable=False)
     password_encrypted = db.Column(db.String(256), nullable=False)
 
+# Initialize database
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -54,9 +87,7 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
-    # Log the user in after registration
     session['username'] = username
-
     return jsonify({"success": "User registered successfully."})
 
 @app.route("/login", methods=["POST"])
@@ -65,21 +96,15 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    print("Login attempt:", username, password)  # Debug
-
     if not username or not password:
-        print("Missing username or password")  # Debug
-        return jsonify({"error": "Both username and password are required."}), 400
+        return jsonify({"error": "Username and password are required."}), 400
 
     user = User.query.filter_by(username=username).first()
-    print("User found:", user)  # Debug
 
     if not user or not check_password_hash(user.password_hash, password):
-        print("Invalid credentials")  # Debug
         return jsonify({"error": "Invalid username or password."}), 401
 
     session['username'] = username
-    print("Login successful")  # Debug
     return jsonify({"success": "Login successful."})
 
 @app.route("/logout", methods=["POST"])
@@ -90,7 +115,7 @@ def logout():
 @app.route("/add", methods=["POST"])
 def add():
     if 'username' not in session:
-        return jsonify({"error": "Unauthorized. Please log in first."}), 401
+        return jsonify({"error": "Not logged in."}), 401
 
     data = request.get_json()
     service = data.get('service')
@@ -105,7 +130,7 @@ def add():
         return jsonify({"error": "User not found."}), 404
 
     encrypted_password = fernet.encrypt(password.encode()).decode()
-    new_password = Password(service=service, username=username, password_encrypted=encrypted_password, user_id=user.id)  # <-- use user_id
+    new_password = Password(service=service, username=username, password_encrypted=encrypted_password, user_id=user.id)
     db.session.add(new_password)
     db.session.commit()
 
@@ -114,7 +139,7 @@ def add():
 @app.route("/get/<service>", methods=["POST"])
 def get(service):
     if 'username' not in session:
-        return jsonify({"error": "Unauthorized. Please log in first."}), 401
+        return jsonify({"error": "Not logged in."}), 401
 
     logged_in_user = session['username']
     data = request.get_json()
@@ -127,19 +152,12 @@ def get(service):
     if not user:
         return jsonify({"error": "User not found."}), 404
 
-    passwords = Password.query.filter_by(user_id=user.id, service=service, username=requested_username).all()
-    if not passwords:
-        return jsonify({"error": "No credentials found for the specified username."}), 404
+    password_entry = Password.query.filter_by(user_id=user.id, service=service, username=requested_username).first()
+    if not password_entry:
+        return jsonify({"error": "Password not found."}), 404
 
-    credentials = [
-        {
-            "username": password.username,
-            "password": fernet.decrypt(password.password_encrypted.encode()).decode()
-        }
-        for password in passwords
-    ]
-
-    return jsonify({"service": service, "credentials": credentials})
+    decrypted_password = fernet.decrypt(password_entry.password_encrypted.encode()).decode()
+    return jsonify({"username": requested_username, "password": decrypted_password})
 
 @app.route("/check-session", methods=["GET"])
 def check_session():
@@ -149,105 +167,106 @@ def check_session():
 
 @app.route("/signup")
 def signup():
-    return render_template("signup.html")
+    return render_template('signup.html')
 
 @app.route("/profile")
 def profile():
     if 'username' not in session:
         return redirect(url_for('index'))
-    username = session['username']
-    return render_template("profile.html", username=username)
+    return render_template('profile.html')
 
 @app.route("/get-services", methods=["GET"])
 def get_services():
     if 'username' not in session:
-        return jsonify([])
-
-    username = session['username']
-    user = User.query.filter_by(username=username).first()
-
-    if user:
-        services = list(set(password.service for password in user.passwords))
-        return jsonify(services)
-    return jsonify([])
+        return jsonify({"error": "Not logged in."}), 401
+    
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        return jsonify({"error": "User not found."}), 404
+    
+    services = db.session.query(Password.service).filter_by(user_id=user.id).distinct().all()
+    return jsonify([service[0] for service in services])
 
 @app.route("/get-all-passwords", methods=["GET"])
 def get_all_passwords():
     if 'username' not in session:
-        return jsonify([])
-
+        return jsonify({"error": "Not logged in."}), 401
+    
     user = User.query.filter_by(username=session['username']).first()
     if not user:
-        return jsonify([])
-
-    passwords = []
-    for password_entry in user.passwords:
-        decrypted_password = fernet.decrypt(password_entry.password_encrypted.encode()).decode()
-        passwords.append({
-            "service": password_entry.service,
-            "username": password_entry.username,
+        return jsonify({"error": "User not found."}), 404
+    
+    passwords = Password.query.filter_by(user_id=user.id).all()
+    result = []
+    for pwd in passwords:
+        decrypted_password = fernet.decrypt(pwd.password_encrypted.encode()).decode()
+        result.append({
+            "id": pwd.id,
+            "service": pwd.service,
+            "username": pwd.username,
             "password": decrypted_password
         })
-
-    return jsonify(passwords)
+    return jsonify(result)
 
 @app.route("/view-passwords")
 def view_passwords():
     if 'username' not in session:
         return redirect(url_for('index'))
-    return render_template("view_passwords.html")
+    return render_template('view_passwords.html')
 
 @app.route("/delete-password", methods=["POST"])
 def delete_password():
     if 'username' not in session:
-        return jsonify({"error": "Unauthorized. Please log in first."}), 401
-
+        return jsonify({"error": "Not logged in."}), 401
+    
     data = request.get_json()
-    service = data.get('service')
-    username = data.get('username')
-
-    if not service or not username:
-        return jsonify({"error": "Service and username are required."}), 400
-
-    logged_in_user = session['username']
-    user = User.query.filter_by(username=logged_in_user).first()
-
+    password_id = data.get('id')
+    
+    if not password_id:
+        return jsonify({"error": "Password ID is required."}), 400
+    
+    user = User.query.filter_by(username=session['username']).first()
     if not user:
         return jsonify({"error": "User not found."}), 404
-
-    password = Password.query.filter_by(user_id=user.id, service=service, username=username).first()
-    if not password:
+    
+    password_entry = Password.query.filter_by(id=password_id, user_id=user.id).first()
+    if not password_entry:
         return jsonify({"error": "Password not found."}), 404
-
-    db.session.delete(password)
+    
+    db.session.delete(password_entry)
     db.session.commit()
+    
     return jsonify({"success": "Password deleted successfully."})
 
 @app.route("/edit-password", methods=["POST"])
 def edit_password():
     if 'username' not in session:
-        return jsonify({"error": "Unauthorized. Please log in first."}), 401
-
+        return jsonify({"error": "Not logged in."}), 401
+    
     data = request.get_json()
-    service = data.get('service')
-    username = data.get('username')
-    new_password = data.get('new_password')
-
-    if not service or not username or not new_password:
-        return jsonify({"error": "Service, username, and new password are required."}), 400
-
+    password_id = data.get('id')
+    new_password = data.get('password')
+    
+    if not password_id or not new_password:
+        return jsonify({"error": "Password ID and new password are required."}), 400
+    
     user = User.query.filter_by(username=session['username']).first()
     if not user:
         return jsonify({"error": "User not found."}), 404
-
-    password_entry = Password.query.filter_by(service=service, username=username, user_id=user.id).first()  # <-- use user_id
+    
+    password_entry = Password.query.filter_by(id=password_id, user_id=user.id).first()
     if not password_entry:
         return jsonify({"error": "Password not found."}), 404
-
-    password_entry.password_encrypted = fernet.encrypt(new_password.encode()).decode()
+    
+    encrypted_password = fernet.encrypt(new_password.encode()).decode()
+    password_entry.password_encrypted = encrypted_password
     db.session.commit()
-
+    
     return jsonify({"success": "Password updated successfully."})
 
+# Vercel entry point
+def handler(request):
+    return app(request)
+
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True)
