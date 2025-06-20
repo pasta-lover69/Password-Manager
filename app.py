@@ -60,14 +60,19 @@ class Password(db.Model):
     username = db.Column(db.String(150), nullable=False)
     password_encrypted = db.Column(db.String(256), nullable=False)
 
-# Initialize database
-@app.before_first_request
+# Initialize database - Updated for newer Flask versions
 def create_tables():
-    db.create_all()
+    with app.app_context():
+        db.create_all()
 
 # Routes
 @app.route('/')
 def index():
+    # Ensure tables exist on first request
+    try:
+        db.create_all()
+    except:
+        pass
     return render_template('index.html')
 
 @app.route("/register", methods=["POST"])
