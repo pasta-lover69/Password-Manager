@@ -16,7 +16,7 @@ function showAddPasswordModal() {
 }
 
 function showGetPasswordModal() {
-  document.getElementById('get-password-modal').style.display = 'block';
+  document.getElementById("get-password-modal").style.display = "block";
   populateServiceDropdowns();
 }
 
@@ -50,9 +50,9 @@ async function addPassword() {
     const response = await fetch("/add", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ service, username, password })
+      body: JSON.stringify({ service, username, password }),
     });
 
     const data = await response.json();
@@ -81,14 +81,16 @@ async function getPassword() {
     const response = await fetch(`/get/${service}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username }),
     });
 
     const data = await response.json();
     if (response.ok) {
-      alert(`Username: ${data.credentials[0].username}\nPassword: ${data.credentials[0].password}`);
+      alert(
+        `Username: ${data.credentials[0].username}\nPassword: ${data.credentials[0].password}`
+      );
       closeModal("get-password-modal");
     } else {
       showErrorModal(data.error || "An unknown error occurred.");
@@ -118,9 +120,9 @@ async function register() {
     const response = await fetch("/register", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
     });
 
     const data = await response.json();
@@ -166,15 +168,19 @@ async function login() {
   }
 
   try {
+    console.log("Attempting login for:", username); // Debug log
     const response = await fetch("/login", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password }),
     });
 
+    console.log("Response status:", response.status); // Debug log
     const data = await response.json();
+    console.log("Response data:", data); // Debug log
+
     if (response.ok) {
       alert("Login successful!");
       window.location.href = "/profile";
@@ -182,15 +188,15 @@ async function login() {
       errorElement.textContent = data.error || "An unknown error occurred.";
     }
   } catch (error) {
+    console.error("Login error:", error); // Better error logging
     errorElement.textContent = "Failed to log in. Please try again.";
-    console.error(error);
   }
 }
 
 async function logout() {
   try {
     const response = await fetch("/logout", {
-      method: "POST"
+      method: "POST",
     });
 
     const data = await response.json();
@@ -229,14 +235,14 @@ async function checkSession() {
 }
 
 function populateServiceDropdowns() {
-  fetch('/get-services')
-    .then(res => res.json())
-    .then(services => {
-      const getServiceSelect = document.getElementById('get-service');
+  fetch("/get-services")
+    .then((res) => res.json())
+    .then((services) => {
+      const getServiceSelect = document.getElementById("get-service");
       if (getServiceSelect) {
-        getServiceSelect.innerHTML = '';
-        services.forEach(service => {
-          const option = document.createElement('option');
+        getServiceSelect.innerHTML = "";
+        services.forEach((service) => {
+          const option = document.createElement("option");
           option.value = service;
           option.textContent = service;
           getServiceSelect.appendChild(option);
@@ -299,7 +305,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (dropdownBtn && dropdownContent) {
     dropdownBtn.addEventListener("click", function (e) {
       e.stopPropagation();
-      dropdownContent.style.display = dropdownContent.style.display === "block" ? "none" : "block";
+      dropdownContent.style.display =
+        dropdownContent.style.display === "block" ? "none" : "block";
     });
 
     // Hide dropdown when clicking outside
