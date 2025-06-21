@@ -140,6 +140,61 @@ async function register() {
   }
 }
 
+async function signup() {
+  const username = document.getElementById("signup-username").value.trim();
+  const password = document.getElementById("signup-password").value.trim();
+  const confirmPassword = document
+    .getElementById("signup-confirm-password")
+    .value.trim();
+  const errorElement = document.getElementById("signup-error");
+
+  // Clear previous errors
+  errorElement.textContent = "";
+
+  // Validation
+  if (!username || !password || !confirmPassword) {
+    errorElement.textContent = "Please fill in all fields.";
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    errorElement.textContent = "Passwords do not match.";
+    return;
+  }
+
+  if (password.length < 6) {
+    errorElement.textContent = "Password must be at least 6 characters long.";
+    return;
+  }
+
+  try {
+    console.log("Attempting signup for:", username); // Debug log
+
+    const response = await fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    console.log("Signup response status:", response.status); // Debug log
+    const data = await response.json();
+    console.log("Signup response data:", data); // Debug log
+
+    if (response.ok) {
+      alert("Registration successful! Redirecting to your profile...");
+      // Redirect to profile page
+      window.location.href = "/profile";
+    } else {
+      errorElement.textContent = data.error || "Registration failed.";
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+    errorElement.textContent = "Registration failed. Please try again.";
+  }
+}
+
 function showLoading() {
   document.getElementById("loading-spinner").style.display = "block";
 }
@@ -169,6 +224,7 @@ async function login() {
 
   try {
     console.log("Attempting login for:", username); // Debug log
+
     const response = await fetch("/login", {
       method: "POST",
       headers: {
@@ -177,18 +233,19 @@ async function login() {
       body: JSON.stringify({ username, password }),
     });
 
-    console.log("Response status:", response.status); // Debug log
+    console.log("Login response status:", response.status); // Debug log
     const data = await response.json();
-    console.log("Response data:", data); // Debug log
+    console.log("Login response data:", data); // Debug log
 
     if (response.ok) {
+      console.log("Login successful, redirecting..."); // Debug log
       alert("Login successful!");
       window.location.href = "/profile";
     } else {
-      errorElement.textContent = data.error || "An unknown error occurred.";
+      errorElement.textContent = data.error || "Login failed.";
     }
   } catch (error) {
-    console.error("Login error:", error); // Better error logging
+    console.error("Login error:", error);
     errorElement.textContent = "Failed to log in. Please try again.";
   }
 }
@@ -236,6 +293,31 @@ async function checkAuthStatus() {
   }
 }
 
+// Added this function to check if user is properly logged in
+async function checkAuthenticationStatus() {
+  try {
+    const response = await fetch("/check-session");
+    const data = await response.json();
+
+    console.log("Auth status:", data); // Debug log
+
+    if (!data.logged_in) {
+      // User is not logged in, redirect to home
+      window.location.href = "/";
+    }
+
+    return data.logged_in;
+  } catch (error) {
+    console.error("Auth check error:", error);
+    return false;
+  }
+}
+
+// Call this when profile page loads
+if (window.location.pathname === "/profile") {
+  document.addEventListener("DOMContentLoaded", checkAuthenticationStatus);
+}
+
 function exitApp() {
   window.close();
   window.location.href = "about:blank";
@@ -275,70 +357,191 @@ function populateServiceDropdowns() {
     });
 }
 
-async function fetchPasswords() {
+// Modal control functions
+function openGetPasswordModal() {
+  const modal = document.getElementById("getPasswordModal");
+  modal.style.display = "block";
+
+  // Load available services
+  loadUserServices();
+
+  // Reset form
+  document.getElementById("getService").value = "";
+  document.getElementById("getUsername").value = "";
+  document.getElementById("passwordResult").style.display = "none";
+}
+
+function closeGetPasswordModal() {
+  const modal = document.getElementById("getPasswordModal");
+  modal.style.display = "none";
+}
+
+// Close modal when clicking outside
+window.onclick = function (event) {
+  const modal = document.getElementById("getPasswordModal");
+  if (event.target == modal) {
+    closeGetPasswordModal();
+  }
+};
+
+// Load user's services into dropdown
+async function loadUserServices() {
   try {
-    const response = await fetch("/get-all-passwords", {
-      method: "GET",
+    const response = await fetch("/get-services");
+    const services = await response.json();
+
+    const serviceSelect = document.getElementById("getService");
+
+    // Clear existing options except the first one
+    while (serviceSelect.children.length > 1) {
+      serviceSelect.removeChild(serviceSelect.lastChild);
+    }
+
+    // Add user's services
+    services.forEach((service) => {
+      const option = document.createElement("option");
+      option.value = service;
+      option.textContent = service;
+      serviceSelect.appendChild(option);
     });
+
+    // Add common services that might not be in user's list
+    const commonServices = [
+      "Facebook",
+      "Twitter",
+      "Instagram",
+      "Netflix",
+      "Spotify",
+      "TikTok",
+      "Other",
+    ];
+    commonServices.forEach((service) => {
+      // Check if service already exists
+      let exists = false;
+      for (let i = 1; i < serviceSelect.children.length; i++) {
+        if (serviceSelect.children[i].value === service) {
+          exists = true;
+          break;
+        }
+      }
+
+      if (!exists) {
+        const option = document.createElement("option");
+        option.value = service;
+        option.textContent = service;
+        serviceSelect.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading services:", error);
+  }
+}
+
+// Retrieve password function
+async function retrievePassword() {
+  const service = document.getElementById("getService").value.trim();
+  const username = document.getElementById("getUsername").value.trim();
+  const resultDiv = document.getElementById("passwordResult");
+  const passwordDisplay = document.getElementById("retrievedPassword");
+
+  // Validation
+  if (!service) {
+    alert("Please select a service.");
+    return;
+  }
+
+  if (!username) {
+    alert("Please enter a username/email.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/get/${encodeURIComponent(service)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username: username }),
+    });
+
+    const data = await response.json();
 
     if (response.ok) {
-      const passwords = await response.json();
-      const tableBody = document.getElementById("password-table-body");
+      // Display the password
+      passwordDisplay.textContent = data.password;
+      resultDiv.style.display = "block";
 
-      tableBody.innerHTML = "";
-
-      passwords.forEach(({ service, username, password }) => {
-        const row = document.createElement("tr");
-
-        const serviceCell = document.createElement("td");
-        serviceCell.textContent = service;
-
-        const usernameCell = document.createElement("td");
-        usernameCell.textContent = username;
-
-        const passwordCell = document.createElement("td");
-
-        row.appendChild(serviceCell);
-        row.appendChild(usernameCell);
-        row.appendChild(passwordCell);
-
-        tableBody.appendChild(row);
-      });
+      // Show success message
+      showNotification("Password retrieved successfully!", "success");
     } else {
-      console.error("Failed to fetch passwords.");
+      // Show error message
+      alert("Error: " + (data.error || "Password not found"));
+      resultDiv.style.display = "none";
     }
   } catch (error) {
-    console.error("Error fetching passwords:", error);
+    console.error("Error retrieving password:", error);
+    alert("Failed to retrieve password. Please try again.");
+    resultDiv.style.display = "none";
   }
 }
 
-function togglePasswordVisibility(inputId, toggleButton) {
-  const passwordInput = document.getElementById(inputId);
-  const isPasswordVisible = passwordInput.type === "text";
+// Copy password to clipboard
+async function copyPassword() {
+  const passwordText = document.getElementById("retrievedPassword").textContent;
 
-  passwordInput.type = isPasswordVisible ? "password" : "text";
-
-  toggleButton.textContent = isPasswordVisible ? "👁️" : "🙈";
+  try {
+    await navigator.clipboard.writeText(passwordText);
+    showNotification("Password copied to clipboard!", "success");
+  } catch (error) {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = passwordText;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+    showNotification("Password copied to clipboard!", "success");
+  }
 }
 
-// Dropdown toggle logic
-document.addEventListener("DOMContentLoaded", function () {
-  const dropdownBtn = document.getElementById("dropdownBtn");
-  const dropdownContent = document.getElementById("dropdownContent");
+// Notification function
+function showNotification(message, type = "info") {
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
 
-  if (dropdownBtn && dropdownContent) {
-    dropdownBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      dropdownContent.style.display =
-        dropdownContent.style.display === "block" ? "none" : "block";
-    });
+  // Style the notification
+  notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s;
+        ${
+          type === "success"
+            ? "background-color: #28a745;"
+            : "background-color: #007bff;"
+        }
+    `;
 
-    // Hide dropdown when clicking outside
-    document.addEventListener("click", function () {
-      dropdownContent.style.display = "none";
-    });
-  }
-});
+  // Add to page
+  document.body.appendChild(notification);
+
+  // Show notification
+  setTimeout(() => (notification.style.opacity = "1"), 100);
+
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = "0";
+    setTimeout(() => document.body.removeChild(notification), 300);
+  }, 3000);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   checkSession();

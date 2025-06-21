@@ -1,39 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Manager - Login</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div class="container">
-    <div class="card">
-      <h1 class="title">Welcome Back</h1>
-      <p class="subtitle">Securely manage your passwords with ease.</p>
-      <form id="login-form">
-        <div class="input-group">
-          <label for="login-username">Username</label>
-          <input id="login-username" type="text" placeholder="Enter your username" required>
-        </div>
-        <div class="input-group">
-          <label for="login-password">Password</label>
-          <div class="password-container">
-            <input id="login-password" type="password" placeholder="Enter your password" required>
-            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('login-password', this)">👁️</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Password Manager - Login</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1 class="title">Welcome Back</h1>
+        <p class="subtitle">Securely manage your passwords with ease.</p>
+        <form id="login-form">
+          <div class="input-group">
+            <label for="login-username">Username</label>
+            <input
+              id="login-username"
+              type="text"
+              placeholder="Enter your username"
+              required
+            />
           </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <div class="password-container">
+              <input
+                id="login-password"
+                type="password"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                onclick="togglePasswordVisibility('login-password', this)"
+              >
+                👁️
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">Log In</button>
+          <p id="login-error" class="error-message"></p>
+        </form>
+        <div class="loading" id="loading-spinner"></div>
+        <div class="footer">
+          <p>Don't have an account? <a href="/signup">Sign up</a></p>
         </div>
-        <button type="submit" class="btn-primary">Log In</button>
-        <p id="login-error" class="error-message"></p>
-      </form>
-      <div class="loading" id="loading-spinner"></div>
-      <div class="footer">
-        <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        <button
+          id="logout-btn"
+          onclick="logout()"
+          class="logout-btn"
+          style="display: none"
+        >
+          Logout
+        </button>
       </div>
-      <button id="logout-btn" onclick="logout()" class="logout-btn" style="display: none;">Logout</button>
     </div>
-  </div>
-  <script src="/static/main.js"></script>
-</body>
+    <script src="/static/main.js"></script>
+  </body>
 </html>

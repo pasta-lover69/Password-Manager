@@ -80,6 +80,51 @@
         <button class="btn-primary" onclick="getPassword()">Get</button>
       </div>
     </div>
+
+    <div id="getPasswordModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeGetPasswordModal()">&times;</span>
+        <h2>🔍 Retrieve Password</h2>
+
+        <div class="modal-form">
+          <select id="getService" required>
+            <option value="">Select a service</option>
+            <option value="Facebook">Facebook</option>
+            <option value="Twitter">Twitter</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Spotify">Spotify</option>
+            <option value="TikTok">TikTok</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <input
+            type="text"
+            id="getUsername"
+            placeholder="Enter username/email"
+            required
+          />
+        </div>
+
+        <div class="modal-buttons">
+          <button onclick="retrievePassword()" class="modal-btn primary">
+            Get Password
+          </button>
+          <button onclick="closeGetPasswordModal()" class="modal-btn secondary">
+            Cancel
+          </button>
+        </div>
+
+        <div id="passwordResult" class="password-result" style="display: none">
+          <h3>📋 Retrieved Password:</h3>
+          <div class="password-display" id="retrievedPassword"></div>
+          <button onclick="copyPassword()" class="copy-btn">
+            📋 Copy Password
+          </button>
+        </div>
+      </div>
+    </div>
+
     {% endblock %}
 
     <button id="logout-btn" onclick="logout()" class="logout-btn">

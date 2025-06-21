@@ -84,16 +84,28 @@ def register():
     if not username or not password:
         return jsonify({"error": "Username and password are required."}), 400
 
+    # Check if username already exists
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists."}), 400
 
-    hashed_password = generate_password_hash(password)
-    new_user = User(username=username, password_hash=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
+    try:
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password_hash=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
 
-    session['username'] = username
-    return jsonify({"success": "User registered successfully."})
+        # Log the user in after successful registration
+        session['username'] = username
+        
+        return jsonify({
+            "success": "User registered successfully.",
+            "redirect": "/profile"
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Registration failed. Please try again."}), 500
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -101,16 +113,38 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
+    print(f"Login attempt for username: {username}")  # Debug
+
     if not username or not password:
         return jsonify({"error": "Username and password are required."}), 400
 
-    user = User.query.filter_by(username=username).first()
+    try:
+        user = User.query.filter_by(username=username).first()
+        print(f"User found in database: {user is not None}")  # Debug
 
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({"error": "Invalid username or password."}), 401
+        if not user:
+            return jsonify({"error": "Invalid username or password."}), 401
 
-    session['username'] = username
-    return jsonify({"success": "Login successful."})
+        password_valid = check_password_hash(user.password_hash, password)
+        print(f"Password valid: {password_valid}")  # Debug
+
+        if not password_valid:
+            return jsonify({"error": "Invalid username or password."}), 401
+
+        # Set session
+        session['username'] = username
+        print(f"Session set for user: {username}")  # Debug
+        print(f"Session contents: {dict(session)}")  # Debug
+
+        return jsonify({
+            "success": "Login successful.",
+            "username": username,
+            "redirect": "/profile"
+        })
+
+    except Exception as e:
+        print(f"Login error: {str(e)}")  # Debug
+        return jsonify({"error": "Login failed. Please try again."}), 500
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
@@ -155,16 +189,29 @@ def get(service):
     if not requested_username:
         return jsonify({"error": "Username is required."}), 400
 
-    user = User.query.filter_by(username=logged_in_user).first()
-    if not user:
-        return jsonify({"error": "User not found."}), 404
+    try:
+        user = User.query.filter_by(username=logged_in_user).first()
+        if not user:
+            return jsonify({"error": "User not found."}), 404
 
-    password_entry = Password.query.filter_by(user_id=user.id, service=service, username=requested_username).first()
-    if not password_entry:
-        return jsonify({"error": "Password not found."}), 404
+        password_entry = Password.query.filter_by(
+            user_id=user.id, 
+            service=service, 
+            username=requested_username
+        ).first()
+        
+        if not password_entry:
+            return jsonify({"error": f"No password found for {requested_username} on {service}."}), 404
 
-    decrypted_password = fernet.decrypt(password_entry.password_encrypted.encode()).decode()
-    return jsonify({"username": requested_username, "password": decrypted_password})
+        decrypted_password = fernet.decrypt(password_entry.password_encrypted.encode()).decode()
+        return jsonify({
+            "username": requested_username, 
+            "password": decrypted_password,
+            "service": service
+        })
+    
+    except Exception as e:
+        return jsonify({"error": "Failed to retrieve password."}), 500
 
 @app.route("/check-session", methods=["GET"])
 def check_session():
@@ -180,6 +227,13 @@ def signup():
 def profile():
     if 'username' not in session:
         return redirect(url_for('index'))
+    
+    # Double-check the user exists in database
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        session.clear()  # Clear invalid session
+        return redirect(url_for('index'))
+    
     return render_template('profile.html')
 
 @app.route("/get-services", methods=["GET"])
