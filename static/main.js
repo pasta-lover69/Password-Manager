@@ -197,18 +197,42 @@ async function logout() {
   try {
     const response = await fetch("/logout", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     const data = await response.json();
     if (response.ok) {
-      showNotification("Logged out successfully!");
+      alert("Logged out successfully!");
+      // Redirect to login page
       window.location.href = "/";
     } else {
-      alert(data.error || "An unknown error occurred.");
+      alert("Error logging out: " + (data.error || "Unknown error"));
     }
   } catch (error) {
+    console.error("Logout error:", error);
     alert("Failed to log out. Please try again.");
-    console.error(error);
+  }
+}
+
+async function checkAuthStatus() {
+  try {
+    const response = await fetch("/check-session");
+    const data = await response.json();
+
+    const logoutBtn = document.getElementById("logout-btn");
+    const loginSection = document.getElementById("login-section");
+
+    if (data.logged_in) {
+      if (logoutBtn) logoutBtn.style.display = "block";
+      if (loginSection) loginSection.style.display = "none";
+    } else {
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (loginSection) loginSection.style.display = "block";
+    }
+  } catch (error) {
+    console.error("Auth check error:", error);
   }
 }
 
@@ -336,4 +360,6 @@ document.addEventListener("DOMContentLoaded", () => {
       register();
     });
   }
+
+  checkAuthStatus();
 });
