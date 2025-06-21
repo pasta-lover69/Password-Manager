@@ -95,6 +95,21 @@ body {
   transition: background 0.3s ease;
 }
 
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 10px;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
 /* Navigation */
 .navbar {
   position: absolute;

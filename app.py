@@ -112,9 +112,11 @@ def login():
     session['username'] = username
     return jsonify({"success": "Login successful."})
 
-@app.route("/logout", methods=["POST"])
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
+    if request.method == "GET":
+        return redirect(url_for('index'))
     return jsonify({"success": "Logged out successfully."})
 
 @app.route("/add", methods=["POST"])

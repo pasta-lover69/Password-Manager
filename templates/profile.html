@@ -1,72 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Profile</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-</head>
-<body>
-  <nav class="navbar">
-    <div class="navbar-container">
-      <div class="dropdown">
-        <button class="dropdown-button" id="dropdownBtn">Menu</button>
-        <div class="dropdown-content" id="dropdownContent">
-          <a href="#" onclick="showAddPasswordModal()">Add Password</a>
-          <a href="#" onclick="showGetPasswordModal()">Get Password</a>
-          <a href="/view-passwords">View Passwords</a>
-          <a href="#" onclick="logout()">Logout</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Profile</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-container">
+        <div class="dropdown">
+          <button class="dropdown-button" id="dropdownBtn">Menu</button>
+          <div class="dropdown-content" id="dropdownContent">
+            <a href="#" onclick="showAddPasswordModal()">Add Password</a>
+            <a href="#" onclick="showGetPasswordModal()">Get Password</a>
+            <a href="/view-passwords">View Passwords</a>
+            <a href="#" onclick="logout()">Logout</a>
+          </div>
         </div>
       </div>
-    </div>
-  </nav>
+    </nav>
 
-  <div class="center-container">
-    <div class="card">
-      <h1 class="title">Welcome, {{ username }}</h1>
-      <p class="subtitle">Manage your passwords securely.</p>
+    <div class="center-container">
+      <div class="card">
+        <h1 class="title">Welcome, {{ username }}</h1>
+        <p class="subtitle">Manage your passwords securely.</p>
+      </div>
     </div>
-  </div>
 
-  {% block modals %}
-  <div id="add-password-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('add-password-modal')">&times;</span>
-      <h2>Add Password</h2>
-      <div class="input-group">
-        <label for="add-service">Service</label>
-        <input id="add-service" type="text" placeholder="Enter service name">
+    {% block modals %}
+    <div id="add-password-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('add-password-modal')"
+          >&times;</span
+        >
+        <h2>Add Password</h2>
+        <div class="input-group">
+          <label for="add-service">Service</label>
+          <input
+            id="add-service"
+            type="text"
+            placeholder="Enter service name"
+          />
+        </div>
+        <div class="input-group">
+          <label for="add-username">Username</label>
+          <input id="add-username" type="text" placeholder="Enter username" />
+        </div>
+        <div class="input-group">
+          <label for="add-password">Password</label>
+          <input
+            id="add-password"
+            type="password"
+            placeholder="Enter password"
+          />
+        </div>
+        <button class="btn-primary" onclick="addPassword()">Add</button>
       </div>
-      <div class="input-group">
-        <label for="add-username">Username</label>
-        <input id="add-username" type="text" placeholder="Enter username">
-      </div>
-      <div class="input-group">
-        <label for="add-password">Password</label>
-        <input id="add-password" type="password" placeholder="Enter password">
-      </div>
-      <button class="btn-primary" onclick="addPassword()">Add</button>
     </div>
-  </div>
 
-  <div id="get-password-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('get-password-modal')">&times;</span>
-      <h2>Get Password</h2>
-      <div class="input-group">
-        <label for="get-service">Service</label>
-        <select id="get-service"></select>
+    <div id="get-password-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('get-password-modal')"
+          >&times;</span
+        >
+        <h2>Get Password</h2>
+        <div class="input-group">
+          <label for="get-service">Service</label>
+          <select id="get-service"></select>
+        </div>
+        <div class="input-group">
+          <label for="get-username">Username</label>
+          <input id="get-username" type="text" placeholder="Enter username" />
+        </div>
+        <button class="btn-primary" onclick="getPassword()">Get</button>
       </div>
-      <div class="input-group">
-        <label for="get-username">Username</label>
-        <input id="get-username" type="text" placeholder="Enter username">
-      </div>
-      <button class="btn-primary" onclick="getPassword()">Get</button>
     </div>
-  </div>
-  {% endblock %}
+    {% endblock %}
 
-  <script src="/static/main.js"></script>
-</body>
+    <button id="logout-btn" onclick="logout()" class="logout-btn">
+      Logout
+    </button>
+
+    <script src="/static/main.js"></script>
+  </body>
 </html>
